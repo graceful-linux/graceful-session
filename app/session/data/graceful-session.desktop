@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=start-graceful-session
+TryExec=graceful-session
+DesktopNames=Graceful Linux
+
+NAME=Graceful Linux
+Comment=Lightweight Qt Desktop
+Name[zh_CN]=Graceful Linux桌面
+Comment[zh_CN]=一款超漂亮的桌面

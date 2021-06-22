@@ -37,6 +37,19 @@ FORMS += \
     $$PWD/wm-select-dialog.ui
 
 
+OTHER_FILES += \
+    $$PWD/data/graceful-session.desktop                 \
+    $$PWD/data/start-graceful-session
+
+
+GRACEFUL_SESSION_DESKTOP.files = \
+    $$PWD/data/graceful-session.desktop
+
+
+GRACEFUL_SESSION_DESKTOP.path = /usr/share/xsessions/
+
+target.files += $$PWD/data/start-graceful-session
 target.path = /bin/
 
-INSTALLS += target
+
+INSTALLS += target GRACEFUL_SESSION_DESKTOP
