@@ -35,3 +35,8 @@ HEADERS += \
 
 FORMS += \
     $$PWD/wm-select-dialog.ui
+
+
+target.path = /bin/
+
+INSTALLS += target
