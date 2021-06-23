@@ -15,8 +15,7 @@
 #include <cerrno>
 #include <sys/wait.h>
 
-ProcReaper::ProcReaper()
-    : mShouldRun{true}
+ProcReaper::ProcReaper() : mShouldRun{true}
 {
 #if defined(Q_OS_LINUX)
     int result = prctl(PR_SET_CHILD_SUBREAPER, 1);
@@ -37,22 +36,18 @@ ProcReaper::~ProcReaper()
 void ProcReaper::run()
 {
     pid_t pid = 0;
-    while (true)
-    {
-        if (pid <= 0)
-        {
+    while (true) {
+        if (pid <= 0) {
             QMutexLocker guard{&mMutex};
             mWait.wait(&mMutex, 1000); // 1 second
         }
 
         int status;
         pid = ::waitpid(-1, &status, WNOHANG);
-        if (pid < 0)
-        {
+        if (pid < 0) {
             if (ECHILD != errno)
                 qCDebug(SESSION) << "waitpid failed " << strerror(errno);
-        } else if (pid > 0)
-        {
+        } else if (pid > 0) {
             if (WIFEXITED(status))
                 qCDebug(SESSION) << "Child process " << pid << " exited with status " << WEXITSTATUS(status);
             else if (WIFSIGNALED(status))
@@ -80,10 +75,8 @@ void ProcReaper::stop(const std::set<int64_t> & excludedPids)
     std::vector<pid_t> children;
 #if defined(Q_OS_LINUX)
     PROCTAB * proc_dir = ::openproc(PROC_FILLSTAT);
-    while (proc_t * proc = ::readproc(proc_dir, nullptr))
-    {
-        if (proc->ppid == my_pid)
-        {
+    while (proc_t * proc = ::readproc(proc_dir, nullptr)) {
+        if (proc->ppid == my_pid) {
             children.push_back(proc->tgid);
         }
         ::freeproc(proc);
@@ -91,22 +84,17 @@ void ProcReaper::stop(const std::set<int64_t> & excludedPids)
     ::closeproc(proc_dir);
 #elif defined(Q_OS_FREEBSD)
     int cnt = 0;
-    if (kinfo_proc *proc_info = kinfo_getallproc(&cnt))
-    {
-        for (int i = 0; i < cnt; ++i)
-        {
-            if (proc_info[i].ki_ppid == my_pid)
-            {
+    if (kinfo_proc *proc_info = kinfo_getallproc(&cnt))  {
+        for (int i = 0; i < cnt; ++i) {
+            if (proc_info[i].ki_ppid == my_pid) {
                 children.push_back(proc_info[i].ki_pid);
             }
         }
         free(proc_info);
     }
 #endif
-    for (auto const & child : children)
-    {
-        if (excludedPids.count(child) == 0)
-        {
+    for (auto const & child : children) {
+        if (excludedPids.count(child) == 0) {
             qCDebug(SESSION) << "Seding TERM to child " << child;
             ::kill(child, SIGTERM);
         }
@@ -116,5 +104,6 @@ void ProcReaper::stop(const std::set<int64_t> & excludedPids)
         QMutexLocker guard{&mMutex};
         mShouldRun = false;
     }
+
     QThread::wait(5000); // 5 seconds
 }

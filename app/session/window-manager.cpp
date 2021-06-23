@@ -12,16 +12,18 @@
 bool findProgram(const QString &program)
 {
     QFileInfo fi(program);
-    if (fi.isExecutable())
+    if (fi.isExecutable()) {
         return true;
+    }
 
     const QStringList paths = QFile::decodeName(qgetenv("PATH")).split(':');
-    for(const QString &dir : paths)
-    {
+    for(const QString &dir : paths) {
         QFileInfo fi= QFileInfo(dir + QDir::separator() + program);
-        if (fi.isExecutable() )
+        if (fi.isExecutable()) {
             return true;
+        }
     }
+
     return false;
 }
 
@@ -33,11 +35,9 @@ WindowManagerList getWindowManagerList(bool onlyAvailable)
 
     WindowManagerList ret;
 
-    for (const QString &name : names)
-    {
+    for (const QString &name : names) {
         bool exists = findProgram(name);
-        if (!onlyAvailable || exists)
-        {
+        if (!onlyAvailable || exists) {
             cfg.beginGroup(name);
             WindowManager wm;
             wm.command = name;

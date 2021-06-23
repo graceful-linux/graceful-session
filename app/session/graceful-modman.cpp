@@ -148,20 +148,17 @@ void GracefulModuleManager::startWm(Settings *settings)
 {
     // if the WM is active do not run WM.
     // all window managers must set their name according to the spec
-    if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty())
-    {
+    if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty()) {
         mWmStarted = true;
         return;
     }
 
-    if (mWindowManager.isEmpty())
-    {
+    if (mWindowManager.isEmpty()) {
         mWindowManager = settings->value(QL1S("window_manager")).toString();
     }
 
     // If previuos WM was removed, we show dialog.
-    if (mWindowManager.isEmpty() || ! findProgram(mWindowManager.split(QL1C(' '))[0]))
-    {
+    if (mWindowManager.isEmpty() || ! findProgram(mWindowManager.split(QL1C(' '))[0])) {
         mWindowManager = showWmSelectDialog();
         settings->setValue(QL1S("window_manager"), mWindowManager);
         settings->sync();
@@ -185,14 +182,12 @@ void GracefulModuleManager::startWm(Settings *settings)
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
 {
-    if (!file.value(QL1S("X-Graceful-Module"), false).toBool())
-    {
+    if (!file.value(QL1S("X-Graceful-Module"), false).toBool()) {
         file.startDetached();
         return;
     }
     QStringList args = file.expandExecString();
-    if (args.isEmpty())
-    {
+    if (args.isEmpty()) {
         qCWarning(SESSION) << "Wrong desktop file" << file.fileName();
         return;
     }
@@ -208,13 +203,10 @@ void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
 
 void GracefulModuleManager::startProcess(const QString& name)
 {
-    if (!mNameMap.contains(name))
-    {
+    if (!mNameMap.contains(name)) {
         const auto files = XdgAutoStart::desktopFileList(false);
-        for (const XdgDesktopFile& file : files)
-        {
-            if (QFileInfo(file.fileName()).fileName() == name)
-            {
+        for (const XdgDesktopFile& file : files) {
+            if (QFileInfo(file.fileName()).fileName() == name) {
                 startProcess(file);
                 return;
             }
@@ -249,28 +241,22 @@ void GracefulModuleManager::restartModules(int /*exitCode*/, QProcess::ExitStatu
         return;
     }
 
-    if (!proc->isTerminating())
-    {
+    if (!proc->isTerminating()) {
         QString procName = proc->file.name();
-        switch (exitStatus)
-        {
+        switch (exitStatus) {
         case QProcess::NormalExit:
             qCDebug(SESSION) << "Process" << procName << "(" << proc << ") exited correctly.";
             break;
-        case QProcess::CrashExit:
-        {
+        case QProcess::CrashExit: {
             qCDebug(SESSION) << "Process" << procName << "(" << proc << ") has to be restarted";
             time_t now = time(nullptr);
             mCrashReport[proc].prepend(now);
             while (now - mCrashReport[proc].back() > 60)
                 mCrashReport[proc].pop_back();
-            if (mCrashReport[proc].length() >= MAX_CRASHES_PER_APP)
-            {
+            if (mCrashReport[proc].length() >= MAX_CRASHES_PER_APP) {
                 QMessageBox::warning(nullptr, tr("Crash Report"),
                                      tr("<b>%1</b> crashed too many times. Its autorestart has been disabled until next login.").arg(procName));
-            }
-            else
-            {
+            } else {
                 proc->start();
                 return;
             }
@@ -294,8 +280,7 @@ GracefulModuleManager::~GracefulModuleManager()
     // invalid sender.
 
     ModulesMapIterator i(mNameMap);
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         i.next();
 
         auto p = i.value();
@@ -315,20 +300,17 @@ void GracefulModuleManager::logout(bool doExit)
 {
     // modules
     ModulesMapIterator i(mNameMap);
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         i.next();
         qCDebug(SESSION) << "Module logout" << i.key();
         GracefulModule* p = i.value();
         p->terminate();
     }
     i.toFront();
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         i.next();
         GracefulModule* p = i.value();
-        if (p->state() != QProcess::NotRunning && !p->waitForFinished(2000))
-        {
+        if (p->state() != QProcess::NotRunning && !p->waitForFinished(2000)) {
             qCWarning(SESSION, "Module %s won't terminate ... killing.", qPrintable(i.key()));
             p->kill();
         }
@@ -338,8 +320,7 @@ void GracefulModuleManager::logout(bool doExit)
     mProcReaper.stop({mWmProcess->processId()});
 
     mWmProcess->terminate();
-    if (mWmProcess->state() != QProcess::NotRunning && !mWmProcess->waitForFinished(2000))
-    {
+    if (mWmProcess->state() != QProcess::NotRunning && !mWmProcess->waitForFinished(2000)) {
         qCWarning(SESSION) << "Window Manager won't terminate ... killing.";
         mWmProcess->kill();
     }
@@ -369,11 +350,9 @@ bool GracefulModuleManager::nativeEventFilter(const QByteArray & eventType, void
     if (eventType != "xcb_generic_event_t") // We only want to handle XCB events
         return false;
 
-    if(!mWmStarted && mWaitLoop)
-    {
+    if(!mWmStarted && mWaitLoop) {
         // all window managers must set their name according to the spec
-        if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty())
-        {
+        if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty()) {
             qCDebug(SESSION) << "Window Manager started";
             mWmStarted = true;
             if (mWaitLoop->isRunning())
@@ -399,14 +378,11 @@ void graceful_setenv(const char *env, const QByteArray &value)
 {
     wordexp_t p;
     wordexp(value.constData(), &p, 0);
-    if (p.we_wordc == 1)
-    {
+    if (p.we_wordc == 1) {
 
         qCDebug(SESSION) << "Environment variable" << env << "=" << p.we_wordv[0];
         qputenv(env, p.we_wordv[0]);
-    }
-    else
-    {
+    } else {
         qCWarning(SESSION) << "Error expanding environment variable" << env << "=" << value;
         qputenv(env, value);
     }

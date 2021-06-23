@@ -12,9 +12,12 @@ struct WindowManager
     bool    exists;
 };
 
-typedef QList<WindowManager> WindowManagerList;
+/**
+ * @brief
+ * 根据预配的窗管查找窗管是否存在，然后供用户选择
+ */
 
-/*! Helper functions for window manager detection */
+typedef QList<WindowManager> WindowManagerList;
 WindowManagerList  getWindowManagerList(bool onlyAvailable=true);
 
 bool findProgram(const QString &program);

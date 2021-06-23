@@ -27,7 +27,7 @@ SessionApplication::SessionApplication(int& argc, char** argv) :
     modman = new GracefulModuleManager;
     connect(this, &graceful::Application::unixSignal, modman, [this] { modman->logout(true); });
     new SessionDBusAdaptor(modman);
-    // connect to D-Bus and register as an object:
+
     QDBusConnection::sessionBus().registerService(QSL("org.graceful.session"));
     QDBusConnection::sessionBus().registerObject(QSL("/GracefulSession"), modman);
 
@@ -60,15 +60,15 @@ bool SessionApplication::startup()
     qCDebug(SESSION) << __FILE__ << ":" << __LINE__ << "Session" << configName << "about to launch (default 'session')";
 
     loadEnvironmentSettings(settings);
-    // loadFontSettings(settings);
     loadKeyboardSettings(settings);
     loadMouseSettings(settings);
 
-    if (lockScreenManager->startup(settings.value(QLatin1String("lock_screen_before_power_actions"), true).toBool()
-                                       , settings.value(QLatin1String("power_actions_after_lock_delay"), 0).toInt()))
+    if (lockScreenManager->startup(settings.value(QLatin1String("lock_screen_before_power_actions"), true).toBool(),
+                                   settings.value(QLatin1String("power_actions_after_lock_delay"), 0).toInt())) {
         qCDebug(SESSION) << "LockScreenManager started successfully";
-    else
+    } else {
         qCWarning(SESSION) << "LockScreenManager couldn't start";
+    }
 
     // launch module manager and autostart apps
     modman->startup(settings);
@@ -90,19 +90,16 @@ void SessionApplication::mergeXrdb(const char* content, int len)
 
 void SessionApplication::loadEnvironmentSettings(Settings& settings)
 {
-    // first - set some user defined environment variables (like TERM...)
     settings.beginGroup(QSL("Environment"));
     QByteArray envVal;
     const QStringList keys = settings.childKeys();
-    for(const QString& i : keys)
-    {
+    for(const QString& i : keys) {
         envVal = settings.value(i).toByteArray();
         graceful_setenv(i.toLocal8Bit().constData(), envVal);
     }
     settings.endGroup();
 }
 
-// FIXME: how to set keyboard layout in Wayland?
 void SessionApplication::setxkbmap(QString layout, QString variant, QString model, QStringList options) {
     QStringList args;
     if(!model.isEmpty()) {
@@ -124,7 +121,7 @@ void SessionApplication::setxkbmap(QString layout, QString variant, QString mode
             args << option;
         }
     }
-    // execute the command line
+
     if (!args.isEmpty())
         QProcess::startDetached(QStringLiteral("setxkbmap"), args);
 }
@@ -137,8 +134,7 @@ void SessionApplication::loadKeyboardSettings(Settings& settings)
     /* Keyboard settings */
     unsigned int delay = 0;
     unsigned int interval = 0;
-    if(XkbGetAutoRepeatRate(QX11Info::display(), XkbUseCoreKbd, (unsigned int*) &delay, (unsigned int*) &interval))
-    {
+    if(XkbGetAutoRepeatRate(QX11Info::display(), XkbUseCoreKbd, (unsigned int*) &delay, (unsigned int*) &interval)) {
         delay = settings.value(QSL("delay"), delay).toUInt();
         interval = settings.value(QSL("interval"), interval).toUInt();
         XkbSetAutoRepeatRate(QX11Info::display(), XkbUseCoreKbd, delay, interval);
@@ -210,16 +206,13 @@ void SessionApplication::setLeftHandedMouse(bool mouse_left_handed)
     int idx_1 = 0, idx_3 = 1;
 
     buttons = (unsigned char*)malloc(DEFAULT_PTR_MAP_SIZE);
-    if (!buttons)
-    {
+    if (!buttons) {
         return;
     }
     n_buttons = XGetPointerMapping(QX11Info::display(), buttons, DEFAULT_PTR_MAP_SIZE);
-    if (n_buttons > DEFAULT_PTR_MAP_SIZE)
-    {
+    if (n_buttons > DEFAULT_PTR_MAP_SIZE) {
         more_buttons = (unsigned char*)realloc(buttons, n_buttons);
-        if (!more_buttons)
-        {
+        if (!more_buttons) {
             free(buttons);
             return;
         }
@@ -227,20 +220,19 @@ void SessionApplication::setLeftHandedMouse(bool mouse_left_handed)
         n_buttons = XGetPointerMapping(QX11Info::display(), buttons, n_buttons);
     }
 
-    for (i = 0; i < n_buttons; i++)
-    {
-        if (buttons[i] == 1)
+    for (i = 0; i < n_buttons; i++) {
+        if (buttons[i] == 1) {
             idx_1 = i;
-        else if (buttons[i] == ((n_buttons < 3) ? 2 : 3))
+        } else if (buttons[i] == ((n_buttons < 3) ? 2 : 3)) {
             idx_3 = i;
+        }
     }
 
-    if ((mouse_left_handed && idx_1 < idx_3) ||
-        (!mouse_left_handed && idx_1 > idx_3))
-    {
+    if ((mouse_left_handed && idx_1 < idx_3) || (!mouse_left_handed && idx_1 > idx_3)) {
         buttons[idx_1] = ((n_buttons < 3) ? 2 : 3);
         buttons[idx_3] = 1;
         XSetPointerMapping(QX11Info::display(), buttons, n_buttons);
     }
+
     free(buttons);
 }

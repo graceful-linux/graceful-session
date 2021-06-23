@@ -28,11 +28,9 @@ WMSelectDialog::WMSelectDialog(const WindowManagerList &availableWindowManagers,
     connect(ui->wmList, &QTreeWidget::clicked,       this, &WMSelectDialog::selectFileDialog);
     connect(ui->wmList, &QTreeWidget::activated,     this, &WMSelectDialog::changeBtnStatus);
 
-    for (const WindowManager &wm : availableWindowManagers)
-    {
+    for (const WindowManager &wm : availableWindowManagers) {
         addWindowManager(wm);
     }
-
 
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(0, tr("Other ..."));
@@ -53,8 +51,7 @@ WMSelectDialog::~WMSelectDialog()
 void WMSelectDialog::done( int r )
 {
     QString wm = windowManager();
-    if (r==1 && !wm.isEmpty() && findProgram(wm))
-    {
+    if (r==1 && !wm.isEmpty() && findProgram(wm)) {
         QDialog::done( r );
         close();
     }
