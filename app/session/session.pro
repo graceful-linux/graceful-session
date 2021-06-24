@@ -51,9 +51,11 @@ GRACEFUL_SESSION_DESKTOP.path = /usr/share/xsessions/
 GRACEFUL_WM.files = $$PWD/data/windowmanagers.conf
 GRACEFUL_WM.path = /usr/share/graceful/
 
+GRACEFUL_SESSION_TARGET.files = \
+    $$PWD/data/start-graceful-session                   \
+    $$OUT_PWD/graceful-session
 
-target.files += $$PWD/data/start-graceful-session
-target.path = /bin/
+GRACEFUL_SESSION_TARGET.path = /bin/
 
 
-INSTALLS += target GRACEFUL_WM GRACEFUL_SESSION_DESKTOP
+INSTALLS += GRACEFUL_SESSION_TARGET GRACEFUL_WM GRACEFUL_SESSION_DESKTOP

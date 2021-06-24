@@ -63,6 +63,7 @@ bool SessionApplication::startup()
     loadEnvironmentSettings(settings);
     loadKeyboardSettings(settings);
     loadMouseSettings(settings);
+    initShotcuts();
 
     if (lockScreenManager->startup(settings.value(QLatin1String("lock_screen_before_power_actions"), true).toBool(),
                                    settings.value(QLatin1String("power_actions_after_lock_delay"), 0).toInt())) {

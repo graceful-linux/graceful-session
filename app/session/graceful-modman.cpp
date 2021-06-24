@@ -54,6 +54,9 @@ void GracefulModuleManager::startup(Settings& s)
     // Start window manager
     startWm(&s);
 
+    // start desktop
+    QProcess::startDetached("gnome-shell --replace");
+
     startAutostartApps();
 
     QStringList paths;
@@ -62,8 +65,10 @@ void GracefulModuleManager::startup(Settings& s)
 
     for(const QString &path : qAsConst(paths)) {
         QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
-        if (fi.exists())
+        if (fi.exists()) {
+            log_debug("get theme path: %s", fi.absoluteFilePath().toUtf8().constData());
             mThemeWatcher->addPath(fi.absoluteFilePath());
+        }
     }
 
     themeChanged();
@@ -76,6 +81,7 @@ void GracefulModuleManager::startAutostartApps()
     QList<const XdgDesktopFile*> trayApps;
     for (XdgDesktopFileList::const_iterator i = fileList.constBegin(); i != fileList.constEnd(); ++i) {
         if (i->value(QSL("X-Graceful-Need-Tray"), false).toBool()) {
+            log_debug("autostart file name with tray: %s", i->fileName().toUtf8().constData());
             trayApps.append(&(*i));
         } else {
             startProcess(*i);
@@ -175,10 +181,10 @@ void GracefulModuleManager::startWm(Settings *settings)
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
 {
-    if (!file.value(QL1S("X-Graceful-Module"), false).toBool()) {
-        file.startDetached();
-        return;
-    }
+//    if (!file.value(QL1S("X-Graceful-Module"), false).toBool()) {
+//        file.startDetached();
+//        return;
+//    }
     QStringList args = file.expandExecString();
     if (args.isEmpty()) {
         log_debug("Wrong desktop file %s", file.fileName().toUtf8().constData());

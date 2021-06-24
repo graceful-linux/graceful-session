@@ -10,10 +10,14 @@ int main (int argc, char* argv[])
     SessionApplication app(argc, argv);
 
     QString logPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.local/log/graceful-session.log";
-    FILE* lf = fopen(logPath.toUtf8().constData(), "w+");
-    log_set_level(LOG_DEBUG);
-    if (lf)     log_add_fp(lf, LOG_DEBUG);
+    FILE* lf = fopen(logPath.toUtf8().constData(), "a+");
+    log_set_level(LOG_TRACE);
     log_info("start graceful-session");
+    if (lf) {
+        log_add_fp(lf, LOG_TRACE);
+    } else {
+        log_error("graceful-session fopen %s error!", logPath.toUtf8().constData());
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Graceful Session"));
