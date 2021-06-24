@@ -17,7 +17,7 @@
 #include "wm-select-dialog.h"
 #include "window-manager.h"
 #include <wordexp.h>
-#include "log.h"
+#include <graceful/log.h>
 
 #include <KF5/KWindowSystem/netwm.h>
 #include <KF5/KWindowSystem/KWindowSystem>
@@ -60,8 +60,7 @@ void GracefulModuleManager::startup(Settings& s)
     paths << XdgDirs::dataHome(false);
     paths << XdgDirs::dataDirs();
 
-    for(const QString &path : qAsConst(paths))
-    {
+    for(const QString &path : qAsConst(paths)) {
         QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
         if (fi.exists())
             mThemeWatcher->addPath(fi.absoluteFilePath());
@@ -72,25 +71,21 @@ void GracefulModuleManager::startup(Settings& s)
 
 void GracefulModuleManager::startAutostartApps()
 {
-    // XDG autostart
+    log_debug("XDG autostart ...");
     const XdgDesktopFileList fileList = XdgAutoStart::desktopFileList();
     QList<const XdgDesktopFile*> trayApps;
-    for (XdgDesktopFileList::const_iterator i = fileList.constBegin(); i != fileList.constEnd(); ++i)
-    {
-        if (i->value(QSL("X-Graceful-Need-Tray"), false).toBool())
+    for (XdgDesktopFileList::const_iterator i = fileList.constBegin(); i != fileList.constEnd(); ++i) {
+        if (i->value(QSL("X-Graceful-Need-Tray"), false).toBool()) {
             trayApps.append(&(*i));
-        else
-        {
+        } else {
             startProcess(*i);
-            qCDebug(SESSION) << "start" << i->fileName();
+            log_debug("start %s", i->fileName().toUtf8().constData());
         }
     }
 
-    if (!trayApps.isEmpty())
-    {
+    if (!trayApps.isEmpty()) {
         mTrayStarted = QSystemTrayIcon::isSystemTrayAvailable();
-        if(!mTrayStarted)
-        {
+        if(!mTrayStarted) {
             QEventLoop waitLoop;
             mWaitLoop = &waitLoop;
             // add a timeout to avoid infinite blocking if a WM fail to execute.
@@ -98,9 +93,8 @@ void GracefulModuleManager::startAutostartApps()
             waitLoop.exec();
             mWaitLoop = nullptr;
         }
-        for (const XdgDesktopFile* const f : qAsConst(trayApps))
-        {
-            qCDebug(SESSION) << "start tray app" << f->fileName();
+        for (const XdgDesktopFile* const f : qAsConst(trayApps)) {
+            log_debug("start tray app %s", f->fileName().toUtf8().constData());
             startProcess(*f);
         }
     }
@@ -109,20 +103,19 @@ void GracefulModuleManager::startAutostartApps()
 void GracefulModuleManager::themeFolderChanged(const QString& /*path*/)
 {
     QString newTheme;
-    if (!QFileInfo::exists(mCurrentThemePath))
-    {
+    if (!QFileInfo::exists(mCurrentThemePath)) {
         const QList<GracefulTheme> &allThemes = gracefulTheme.allThemes();
-        if (!allThemes.isEmpty())
+        if (!allThemes.isEmpty()) {
             newTheme = allThemes[0].name();
-        else
+        } else {
             return;
-    }
-    else
+        }
+    } else {
         newTheme = gracefulTheme.currentTheme().name();
+    }
 
     Settings settings("graceful");
-    if (newTheme == settings.value("theme"))
-    {
+    if (newTheme == settings.value("theme")) {
         // force the same theme to be updated
         settings.setValue(QSL("__theme_updated__"), QDateTime::currentMSecsSinceEpoch());
     }
@@ -137,8 +130,7 @@ void GracefulModuleManager::themeChanged()
     if (!mCurrentThemePath.isEmpty())
         mThemeWatcher->removePath(mCurrentThemePath);
 
-    if (gracefulTheme.currentTheme().isValid())
-    {
+    if (gracefulTheme.currentTheme().isValid()) {
         mCurrentThemePath = gracefulTheme.currentTheme().path();
         mThemeWatcher->addPath(mCurrentThemePath);
     }
@@ -164,6 +156,7 @@ void GracefulModuleManager::startWm(Settings *settings)
         settings->sync();
     }
 
+    log_debug("window manager '%s' start...", mWindowManager.toUtf8().constData());
     mWmProcess->start(mWindowManager, QStringList());
 
     // other autostart apps will be handled after the WM becomes available
@@ -188,7 +181,7 @@ void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
     }
     QStringList args = file.expandExecString();
     if (args.isEmpty()) {
-        qCWarning(SESSION) << "Wrong desktop file" << file.fileName();
+        log_debug("Wrong desktop file %s", file.fileName().toUtf8().constData());
         return;
     }
     GracefulModule* proc = new GracefulModule(file, this);
@@ -237,7 +230,7 @@ void GracefulModuleManager::restartModules(int /*exitCode*/, QProcess::ExitStatu
 {
     GracefulModule* proc = qobject_cast<GracefulModule*>(sender());
     if (nullptr == proc) {
-        qCWarning(SESSION) << "Got an invalid (null) module to restart. Ignoring it";
+        log_warn("Got an invalid (null) module to restart. Ignoring it");
         return;
     }
 
@@ -245,10 +238,10 @@ void GracefulModuleManager::restartModules(int /*exitCode*/, QProcess::ExitStatu
         QString procName = proc->file.name();
         switch (exitStatus) {
         case QProcess::NormalExit:
-            qCDebug(SESSION) << "Process" << procName << "(" << proc << ") exited correctly.";
+            log_debug("Process %s exited correctly.", procName.toUtf8().constData());
             break;
         case QProcess::CrashExit: {
-            qCDebug(SESSION) << "Process" << procName << "(" << proc << ") has to be restarted";
+            log_debug("Process %s has to be restarted", procName.toUtf8().constData());
             time_t now = time(nullptr);
             mCrashReport[proc].prepend(now);
             while (now - mCrashReport[proc].back() > 60)
@@ -302,7 +295,7 @@ void GracefulModuleManager::logout(bool doExit)
     ModulesMapIterator i(mNameMap);
     while (i.hasNext()) {
         i.next();
-        qCDebug(SESSION) << "Module logout" << i.key();
+        log_debug("Module logout %s", i.key().toUtf8().constData());
         GracefulModule* p = i.value();
         p->terminate();
     }
@@ -311,7 +304,7 @@ void GracefulModuleManager::logout(bool doExit)
         i.next();
         GracefulModule* p = i.value();
         if (p->state() != QProcess::NotRunning && !p->waitForFinished(2000)) {
-            qCWarning(SESSION, "Module %s won't terminate ... killing.", qPrintable(i.key()));
+            log_debug("Module %s won't terminate ... killing.", qPrintable(i.key()));
             p->kill();
         }
     }
@@ -321,12 +314,13 @@ void GracefulModuleManager::logout(bool doExit)
 
     mWmProcess->terminate();
     if (mWmProcess->state() != QProcess::NotRunning && !mWmProcess->waitForFinished(2000)) {
-        qCWarning(SESSION) << "Window Manager won't terminate ... killing.";
+        log_debug("Window Manager won't terminate ... killing.");
         mWmProcess->kill();
     }
 
-    if (doExit)
+    if (doExit) {
         QCoreApplication::exit(0);
+    }
 }
 
 QString GracefulModuleManager::showWmSelectDialog()
@@ -353,16 +347,15 @@ bool GracefulModuleManager::nativeEventFilter(const QByteArray & eventType, void
     if(!mWmStarted && mWaitLoop) {
         // all window managers must set their name according to the spec
         if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty()) {
-            qCDebug(SESSION) << "Window Manager started";
+            log_debug("Window Manager started");
             mWmStarted = true;
             if (mWaitLoop->isRunning())
                 mWaitLoop->exit();
         }
     }
 
-    if (!mTrayStarted && QSystemTrayIcon::isSystemTrayAvailable() && mWaitLoop)
-    {
-        qCDebug(SESSION) << "System Tray started";
+    if (!mTrayStarted && QSystemTrayIcon::isSystemTrayAvailable() && mWaitLoop) {
+        log_debug("System Tray started");
         mTrayStarted = true;
         if (mWaitLoop->isRunning())
             mWaitLoop->exit();
@@ -379,11 +372,10 @@ void graceful_setenv(const char *env, const QByteArray &value)
     wordexp_t p;
     wordexp(value.constData(), &p, 0);
     if (p.we_wordc == 1) {
-
-        qCDebug(SESSION) << "Environment variable" << env << "=" << p.we_wordv[0];
+        log_debug("Environment variable %s=%s", env, p.we_wordv[0]);
         qputenv(env, p.we_wordv[0]);
     } else {
-        qCWarning(SESSION) << "Error expanding environment variable" << env << "=" << value;
+        log_debug("Error expanding environment variable %s=%s", env, value.toStdString().c_str());
         qputenv(env, value);
     }
     wordfree(&p);
@@ -394,7 +386,7 @@ void graceful_setenv_prepend(const char *env, const QByteArray &value, const QBy
     QByteArray orig(qgetenv(env));
     orig = orig.prepend(separator);
     orig = orig.prepend(value);
-    qCDebug(SESSION) << "Setting special" << env << " variable:" << orig;
+    log_debug("Setting special %s=%s", env, orig.toStdString().c_str());
     graceful_setenv(env, orig);
 }
 

@@ -1,7 +1,6 @@
 #include "lock-screen-manager.h"
 
-#include "log.h"
-
+#include <graceful/log.h>
 #include <graceful/globals.h>
 
 #include <QTimer>
@@ -35,36 +34,34 @@ bool LockScreenManager::startup(bool lockBeforeSleep, int powerAfterLockDelay)
     }
 
     if (!mProvider) {
-        qCDebug(SESSION) << "LockScreenManager: no valid provider";
+        log_debug("LockScreenManager: no valid provider");
         return false;
     }
 
-    qCDebug(SESSION) << "LockScreenManager:"
-                     << mProvider->metaObject()->className()
-                     << "will be used";
+    log_debug("LockScreenManager:%s will be used", mProvider->metaObject()->className());
 
     connect(&mScreenSaver, &graceful::ScreenSaver::done, this, [this, powerAfterLockDelay] {
         if (mLockedBeforeSleep) {
             mLockedBeforeSleep = false;
             QTimer::singleShot(powerAfterLockDelay, this, [this] {
                 mProvider->release();
-                qCDebug(SESSION) << "LockScreenManager: after release";
+                log_debug("LockScreenManager: after release");
             });
         }
     });
 
     connect(mProvider, &LockScreenProvider::lockRequested, this, [this] {
-        qCDebug(SESSION) << "LockScreenManager: lock requested";
+        log_debug("LockScreenManager: lock requested");
         mScreenSaver.lockScreen();
     });
 
     if (lockBeforeSleep) {
         connect(mProvider, &LockScreenProvider::aboutToSleep, this, [this] (bool beforeSleep) {
             if (beforeSleep) {
-                qCDebug(SESSION) << "LockScreenManager: system is about to sleep";
+                log_debug("LockScreenManager: system is about to sleep");
                 mLockedBeforeSleep = true;
                 mScreenSaver.lockScreen();
-                qCDebug(SESSION) << "LockScreenManager: after lockScreen";
+                log_debug("LockScreenManager: after lockScreen");
             } else {
                 inhibit();
             }
@@ -79,7 +76,7 @@ bool LockScreenManager::startup(bool lockBeforeSleep, int powerAfterLockDelay)
 void LockScreenManager::inhibit()
 {
     if (!mProvider->inhibit())
-        qCWarning(SESSION) << "LockScreenManager: could not inhibit session provider";
+        log_debug("LockScreenManager: could not inhibit session provider");
 }
 
 
@@ -134,7 +131,7 @@ bool LogindProvider::inhibit()
         QStringLiteral("delay"));
 
     if (!reply.isValid()) {
-        qCDebug(SESSION) << "LockScreenManager: " << reply.error();
+        log_debug("LockScreenManager: %s", reply.error().message().toUtf8().constData());
         return false;
     }
 
@@ -211,7 +208,7 @@ bool ConsoleKit2Provider::inhibit()
         QStringLiteral("delay"));
 
     if (!reply.isValid()) {
-        qCDebug(SESSION) << "LockScreenWatcher: " << reply.error();
+        log_debug("LockScreenWatcher: %s", reply.error().message().toUtf8().constData());
         return false;
     }
 

@@ -1,6 +1,6 @@
 #include "proc-reaper.h"
 
-#include "log.h"
+#include <graceful/log.h>
 #if defined(Q_OS_LINUX)
 #include <sys/prctl.h>
 #include <proc/readproc.h>
@@ -19,12 +19,14 @@ ProcReaper::ProcReaper() : mShouldRun{true}
 {
 #if defined(Q_OS_LINUX)
     int result = prctl(PR_SET_CHILD_SUBREAPER, 1);
-    if (result != 0)
-        qCWarning(SESSION) << "Unable to to set PR_SET_CHILD_SUBREAPER, " << result << " - " << strerror(errno);
+    if (result != 0) {
+        log_debug("Unable to to set PR_SET_CHILD_SUBREAPER, %d  --  %s", result, strerror(errno));
+    }
 #elif defined(Q_OS_FREEBSD)
     int result = procctl(P_PID, ::getpid(), PROC_REAP_ACQUIRE, nullptr);
-    if (result != 0)
-        qCWarning(SESSION) << "Unable to to set PROC_REAP_ACQUIRE, " << result << " - " << strerror(errno);
+    if (result != 0) {
+        log_debug("Unable to to set PR_SET_CHILD_SUBREAPER, %d  --  %s", result, strerror(errno));
+    }
 #endif
 }
 
@@ -46,14 +48,14 @@ void ProcReaper::run()
         pid = ::waitpid(-1, &status, WNOHANG);
         if (pid < 0) {
             if (ECHILD != errno)
-                qCDebug(SESSION) << "waitpid failed " << strerror(errno);
+                log_debug("waitpid failed %s", strerror(errno));
         } else if (pid > 0) {
             if (WIFEXITED(status))
-                qCDebug(SESSION) << "Child process " << pid << " exited with status " << WEXITSTATUS(status);
+                log_debug("Child process %d exited with status %s", pid, strerror(errno));
             else if (WIFSIGNALED(status))
-                qCDebug(SESSION) << "Child process " << pid << " terminated on signal " << WTERMSIG(status);
+                log_debug("Child process %d terminated on signal %s", pid, strerror(errno));
             else
-                qCDebug(SESSION) << "Child process " << pid << " ended";
+                log_debug("Child process %d ended", pid);
         }
         {
             QMutexLocker guard{&mMutex};
@@ -95,7 +97,7 @@ void ProcReaper::stop(const std::set<int64_t> & excludedPids)
 #endif
     for (auto const & child : children) {
         if (excludedPids.count(child) == 0) {
-            qCDebug(SESSION) << "Seding TERM to child " << child;
+            log_debug("Seding TERM to child %s", child);
             ::kill(child, SIGTERM);
         }
     }

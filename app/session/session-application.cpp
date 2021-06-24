@@ -9,11 +9,12 @@
 #include <graceful/settings.h>
 #include <graceful/globals.h>
 #include <QProcess>
-#include "log.h"
+#include <graceful/log.h>
 
 #include <QX11Info>
 #include <X11/XKBlib.h>
 
+#include <graceful/qhotkey.h>
 #include <graceful/settings.h>
 
 using namespace graceful;
@@ -57,7 +58,7 @@ void SessionApplication::setConfigName(const QString& configName)
 bool SessionApplication::startup()
 {
     Settings settings(configName);
-    qCDebug(SESSION) << __FILE__ << ":" << __LINE__ << "Session" << configName << "about to launch (default 'session')";
+    log_debug("Session %s about to launch (default 'session')", configName.toUtf8().constData());
 
     loadEnvironmentSettings(settings);
     loadKeyboardSettings(settings);
@@ -65,9 +66,9 @@ bool SessionApplication::startup()
 
     if (lockScreenManager->startup(settings.value(QLatin1String("lock_screen_before_power_actions"), true).toBool(),
                                    settings.value(QLatin1String("power_actions_after_lock_delay"), 0).toInt())) {
-        qCDebug(SESSION) << "LockScreenManager started successfully";
+        log_debug("LockScreenManager started successfully");
     } else {
-        qCWarning(SESSION) << "LockScreenManager couldn't start";
+        log_debug("LockScreenManager couldn't start");
     }
 
     // launch module manager and autostart apps
@@ -76,9 +77,20 @@ bool SessionApplication::startup()
     return true;
 }
 
+void SessionApplication::initShotcuts()
+{
+    auto hotkey = new QHotkey(QKeySequence("ctrl+alt+t"), true, this);
+    connect(hotkey, &QHotkey::activated, qApp, [&]() {
+        if (QFile::exists("/bin/gnome-terminal")) {
+            QProcess::startDetached("/bin/gnome-terminal");
+        }
+    });
+
+}
+
 void SessionApplication::mergeXrdb(const char* content, int len)
 {
-    qCDebug(SESSION) << "xrdb:" << content;
+    log_debug("xrdb %s", content);
     QProcess xrdb;
     xrdb.setProgram(QSL("xrdb"));
     xrdb.setArguments(QStringList(QSL("-merge -")));
@@ -128,7 +140,7 @@ void SessionApplication::setxkbmap(QString layout, QString variant, QString mode
 
 void SessionApplication::loadKeyboardSettings(Settings& settings)
 {
-    qCDebug(SESSION) << settings.fileName();
+    log_debug("%s", settings.fileName().toUtf8().constData());
     settings.beginGroup(QSL("Keyboard"));
     XKeyboardControl values;
     /* Keyboard settings */

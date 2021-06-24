@@ -9,7 +9,6 @@ LIBS += -lgio-2.0 -lglib-2.0 -lX11 -lgraceful -lprocps -lXss
 PKGCONFIG += udev Qt5Xdg
 
 SOURCES += \
-    $$PWD/log.cpp                                       \
     $$PWD/main.cpp                                      \
     $$PWD/num-lock.cpp                                  \
     $$PWD/proc-reaper.cpp                               \
@@ -22,7 +21,6 @@ SOURCES += \
 
 
 HEADERS += \
-    $$PWD/log.h                                         \
     $$PWD/num-lock.h                                    \
     $$PWD/proc-reaper.h                                 \
     $$PWD/window-manager.h                              \
@@ -39,7 +37,8 @@ FORMS += \
 
 OTHER_FILES += \
     $$PWD/data/graceful-session.desktop                 \
-    $$PWD/data/start-graceful-session
+    $$PWD/data/start-graceful-session                   \
+    $$PWD/data/windowmanagers.conf
 
 
 GRACEFUL_SESSION_DESKTOP.files = \
@@ -48,8 +47,13 @@ GRACEFUL_SESSION_DESKTOP.files = \
 
 GRACEFUL_SESSION_DESKTOP.path = /usr/share/xsessions/
 
+
+GRACEFUL_WM.files = $$PWD/data/windowmanagers.conf
+GRACEFUL_WM.path = /usr/share/graceful/
+
+
 target.files += $$PWD/data/start-graceful-session
 target.path = /bin/
 
 
-INSTALLS += target GRACEFUL_SESSION_DESKTOP
+INSTALLS += target GRACEFUL_WM GRACEFUL_SESSION_DESKTOP

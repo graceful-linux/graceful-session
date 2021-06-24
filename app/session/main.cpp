@@ -1,11 +1,19 @@
+#include <QStandardPaths>
 #include <QCommandLineParser>
 
+#include <graceful/log.h>
 #include <graceful/globals.h>
 #include "session-application.h"
 
 int main (int argc, char* argv[])
 {
     SessionApplication app(argc, argv);
+
+    QString logPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.local/log/graceful-session.log";
+    FILE* lf = fopen(logPath.toUtf8().constData(), "w+");
+    log_set_level(LOG_DEBUG);
+    if (lf)     log_add_fp(lf, LOG_DEBUG);
+    log_info("start graceful-session");
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Graceful Session"));
@@ -22,5 +30,6 @@ int main (int argc, char* argv[])
     app.setWindowManager(parser.value(wm_opt));
 
     app.setQuitOnLastWindowClosed(false);
+
     return app.exec();
 }

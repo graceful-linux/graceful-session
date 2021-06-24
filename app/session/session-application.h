@@ -3,8 +3,8 @@
 
 #include "lock-screen-manager.h"
 
-#include <graceful/settings.h>
 #include <graceful/application.h>
+#include <graceful/settings.h>
 
 class LockScreenManager;
 class GracefulModuleManager;
@@ -13,29 +13,28 @@ class SessionApplication : public graceful::Application
 {
     Q_OBJECT
 public:
-    SessionApplication(int& argc, char** argv);
+    SessionApplication(int &argc, char **argv);
     ~SessionApplication() override;
-    void setWindowManager(const QString & windowManager);
-    void setConfigName(const QString & configName);
+    void setWindowManager(const QString &windowManager);
+    void setConfigName(const QString &configName);
 
 private Q_SLOTS:
     bool startup();
 
 private:
-    void loadEnvironmentSettings(graceful::Settings& settings);
-    void loadKeyboardSettings(graceful::Settings& settings);
-    void loadMouseSettings(graceful::Settings& settings);
-
+    void initShotcuts();
+    void loadMouseSettings(graceful::Settings &settings);
+    void loadKeyboardSettings(graceful::Settings &settings);
+    void loadEnvironmentSettings(graceful::Settings &settings);
     void setxkbmap(QString layout, QString variant, QString model, QStringList options);
 
-    void mergeXrdb(const char* content, int len);
+    void mergeXrdb(const char *content, int len);
     void setLeftHandedMouse(bool mouse_left_handed);
 
 private:
-    QString                 configName;
-    LockScreenManager*      lockScreenManager;
-    GracefulModuleManager*  modman;
+    QString configName;
+    LockScreenManager *lockScreenManager;
+    GracefulModuleManager *modman;
 };
-
 
 #endif // SESSIONAPPLICATION_H
