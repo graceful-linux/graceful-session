@@ -16,7 +16,7 @@ bool findProgram(const QString &program)
         return true;
     }
 
-    const QStringList paths = QFile::decodeName(qgetenv("PATH")).split(':');
+    const QStringList paths = QFile::decodeName(qgetenv("PATH")).split(':') << "/usr/local/bin/";
     for(const QString &dir : paths) {
         QFileInfo fi= QFileInfo(dir + QDir::separator() + program);
         if (fi.isExecutable()) {

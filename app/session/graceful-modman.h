@@ -65,8 +65,6 @@ private:
 
     void startConfUpdate();
 
-    QString mWindowManager;
-
     ModulesMap mNameMap;
 
     QProcess* mWmProcess;

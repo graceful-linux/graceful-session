@@ -44,7 +44,7 @@ GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
 
 void GracefulModuleManager::setWindowManager(const QString & windowManager)
 {
-    mWindowManager = windowManager;
+    Q_UNUSED(windowManager);
 }
 
 void GracefulModuleManager::startup(Settings& s)
@@ -55,7 +55,10 @@ void GracefulModuleManager::startup(Settings& s)
     startWm(&s);
 
     // start desktop
-    QProcess::startDetached("gnome-shell --replace");
+    QProcess::startDetached("peony-qt-desktop -w -d");
+
+    // start plank
+    QProcess::startDetached("plank");
 
     startAutostartApps();
 
@@ -64,7 +67,7 @@ void GracefulModuleManager::startup(Settings& s)
     paths << XdgDirs::dataDirs();
 
     for(const QString &path : qAsConst(paths)) {
-        QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
+        QFileInfo fi(QString::fromLatin1("%1/ukui/themes").arg(path));
         if (fi.exists()) {
             log_debug("get theme path: %s", fi.absoluteFilePath().toUtf8().constData());
             mThemeWatcher->addPath(fi.absoluteFilePath());
@@ -142,7 +145,7 @@ void GracefulModuleManager::themeChanged()
     }
 }
 
-void GracefulModuleManager::startWm(Settings *settings)
+void GracefulModuleManager::startWm(Settings* settings)
 {
     // if the WM is active do not run WM.
     // all window managers must set their name according to the spec
@@ -151,19 +154,15 @@ void GracefulModuleManager::startWm(Settings *settings)
         return;
     }
 
-    if (mWindowManager.isEmpty()) {
-        mWindowManager = settings->value(QL1S("window_manager")).toString();
+    QString windowManager = "graceful-wm";
+    if (!findProgram(windowManager)) {
+        QMessageBox::critical(nullptr, tr("windows manager error!"), "Window Manager 'graceful-wm' not found!", QMessageBox::Ok);
+        qApp->exit(-1);
+        //
     }
 
-    // If previuos WM was removed, we show dialog.
-    if (mWindowManager.isEmpty() || ! findProgram(mWindowManager.split(QL1C(' '))[0])) {
-        mWindowManager = showWmSelectDialog();
-        settings->setValue(QL1S("window_manager"), mWindowManager);
-        settings->sync();
-    }
-
-    log_debug("window manager '%s' start...", mWindowManager.toUtf8().constData());
-    mWmProcess->start(mWindowManager, QStringList());
+    log_debug("window manager '%s' start...", windowManager.toUtf8().constData());
+    mWmProcess->start(windowManager, QStringList());
 
     // other autostart apps will be handled after the WM becomes available
 
@@ -181,10 +180,10 @@ void GracefulModuleManager::startWm(Settings *settings)
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
 {
-//    if (!file.value(QL1S("X-Graceful-Module"), false).toBool()) {
-//        file.startDetached();
-//        return;
-//    }
+    if (!file.value(QL1S("X-Graceful-Module"), false).toBool()) {
+        file.startDetached();
+        return;
+    }
     QStringList args = file.expandExecString();
     if (args.isEmpty()) {
         log_debug("Wrong desktop file %s", file.fileName().toUtf8().constData());
