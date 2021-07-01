@@ -11,7 +11,6 @@ class QDBusUnixFileDescriptor;
 class LockScreenProvider : public QObject
 {
     Q_OBJECT
-
 public:
     ~LockScreenProvider() override {}
 
@@ -27,7 +26,6 @@ Q_SIGNALS:
 class LogindProvider : public LockScreenProvider
 {
     Q_OBJECT
-
 public:
     explicit LogindProvider();
     ~LogindProvider() override;
@@ -37,8 +35,8 @@ public:
     void release() override;
 
 private:
-    QDBusInterface mInterface;
-    QScopedPointer<QDBusUnixFileDescriptor> mFileDescriptor;
+    QDBusInterface                              mInterface;
+    QScopedPointer<QDBusUnixFileDescriptor>     mFileDescriptor;
 };
 
 class ConsoleKit2Provider : public LockScreenProvider

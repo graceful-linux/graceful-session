@@ -14,7 +14,6 @@ struct WindowManager
 
 /**
  * @brief
- * 根据预配的窗管查找窗管是否存在，然后供用户选择
  */
 
 typedef QList<WindowManager> WindowManagerList;

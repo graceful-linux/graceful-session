@@ -1,14 +1,15 @@
-TEMPLATE = app
-TARGET = graceful-session
+TEMPLATE    = app
+TARGET      = graceful-session
 
-QT += core network gui gui-private xml widgets dbus x11extras KWindowSystem
+QT          += core network gui gui-private xml widgets dbus x11extras KWindowSystem
 
-CONFIG += c++11 link_pkgconfig no_keywords
-LIBS += -lgio-2.0 -lglib-2.0 -lX11 -lgraceful -lprocps -lXss
+CONFIG      += c++11 link_pkgconfig no_keywords
+LIBS        += -lgio-2.0 -lglib-2.0 -lX11 -lgraceful -lprocps -lXss
 
-PKGCONFIG += udev Qt5Xdg
+PKGCONFIG   += udev Qt5Xdg
+include($$PWD/../common/common.pri)
 
-SOURCES += \
+SOURCES     += \
     $$PWD/main.cpp                                      \
     $$PWD/num-lock.cpp                                  \
     $$PWD/proc-reaper.cpp                               \
@@ -20,7 +21,7 @@ SOURCES += \
     $$PWD/session-dbus-adaptor.cpp                      \
 
 
-HEADERS += \
+HEADERS     += \
     $$PWD/num-lock.h                                    \
     $$PWD/proc-reaper.h                                 \
     $$PWD/window-manager.h                              \
@@ -31,7 +32,7 @@ HEADERS += \
     $$PWD/session-dbus-adaptor.h                        \
 
 
-FORMS += \
+FORMS       += \
     $$PWD/wm-select-dialog.ui
 
 
@@ -51,11 +52,11 @@ GRACEFUL_SESSION_DESKTOP.path = /usr/share/xsessions/
 GRACEFUL_WM.files = $$PWD/data/windowmanagers.conf
 GRACEFUL_WM.path = /usr/share/graceful/
 
-GRACEFUL_SESSION_TARGET.files = \
+GRACEFUL_SESSION_TARGET.files += \
     $$PWD/data/start-graceful-session                   \
     $$OUT_PWD/graceful-session
 
-GRACEFUL_SESSION_TARGET.path = /bin/
+GRACEFUL_SESSION_TARGET.path = /usr/bin/
 
 
 INSTALLS += GRACEFUL_SESSION_TARGET GRACEFUL_WM GRACEFUL_SESSION_DESKTOP

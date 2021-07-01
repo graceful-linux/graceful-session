@@ -74,8 +74,8 @@ public Q_SLOTS:
     }
 
 private:
-    GracefulModuleManager*  m_manager;
-    graceful::Power         m_power;
+    GracefulModuleManager*          m_manager;
+    graceful::Power                 m_power;
 };
 
 #endif // SESSIONDBUSADAPTOR_H

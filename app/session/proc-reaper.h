@@ -14,9 +14,9 @@ public:
     virtual void run() override;
     void stop(const std::set<int64_t> & excludedPids);
 private:
-    bool mShouldRun;
-    QMutex mMutex;
-    QWaitCondition mWait;
+    bool                mShouldRun;
+    QMutex              mMutex;
+    QWaitCondition      mWait;
 };
 
 #endif // PROCREAPER_H

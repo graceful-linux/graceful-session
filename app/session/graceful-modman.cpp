@@ -24,7 +24,7 @@
 
 #include <QX11Info>
 
-#define MAX_CRASHES_PER_APP 5
+#define MAX_CRASHES_PER_APP 50
 
 using namespace graceful;
 
@@ -154,6 +154,8 @@ void GracefulModuleManager::startWm(Settings* settings)
         return;
     }
 
+
+
     QString windowManager = "graceful-wm";
     if (!findProgram(windowManager)) {
         QMessageBox::critical(nullptr, tr("windows manager error!"), "Window Manager 'graceful-wm' not found!", QMessageBox::Ok);
@@ -173,9 +175,6 @@ void GracefulModuleManager::startWm(Settings* settings)
     QTimer::singleShot(30 * 1000, &waitLoop, SLOT(quit()));
     waitLoop.exec();
     mWaitLoop = nullptr;
-    // FIXME: blocking is a bad idea. We need to start as many apps as possible and
-    //         only wait for the start of WM when it's absolutely needed.
-    //         Maybe we can add a X-Wait-WM=true key in the desktop entry file?
 }
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
@@ -252,8 +251,7 @@ void GracefulModuleManager::restartModules(int /*exitCode*/, QProcess::ExitStatu
             while (now - mCrashReport[proc].back() > 60)
                 mCrashReport[proc].pop_back();
             if (mCrashReport[proc].length() >= MAX_CRASHES_PER_APP) {
-                QMessageBox::warning(nullptr, tr("Crash Report"),
-                                     tr("<b>%1</b> crashed too many times. Its autorestart has been disabled until next login.").arg(procName));
+                QMessageBox::warning(nullptr, tr("Crash Report"), tr("<b>%1</b> crashed too many times. Its autorestart has been disabled until next login.").arg(procName));
             } else {
                 proc->start();
                 return;

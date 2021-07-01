@@ -32,9 +32,9 @@ private:
     void setLeftHandedMouse(bool mouse_left_handed);
 
 private:
-    QString configName;
-    LockScreenManager *lockScreenManager;
-    GracefulModuleManager *modman;
+    QString                     configName;
+    LockScreenManager*          lockScreenManager;
+    GracefulModuleManager*      modman;
 };
 
 #endif // SESSIONAPPLICATION_H

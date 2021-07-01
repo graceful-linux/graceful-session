@@ -36,9 +36,8 @@ public:
 
     void setWindowManager(const QString & windowManager);
 
-    void startProcess(const QString& name);
-
     void stopProcess(const QString& name);
+    void startProcess(const QString& name);
 
     QStringList listModules() const;
 
@@ -54,31 +53,15 @@ Q_SIGNALS:
     void moduleStateChanged(QString moduleName, bool state);
 
 private:
-    void startWm(graceful::Settings *settings);
     void wmStarted();
+    void startWm(graceful::Settings *settings);
 
     void startAutostartApps();
 
     QString showWmSelectDialog();
 
-    void startProcess(const XdgDesktopFile &file);
-
     void startConfUpdate();
-
-    ModulesMap mNameMap;
-
-    QProcess* mWmProcess;
-
-    ModulesCrashReport mCrashReport;
-
-    QFileSystemWatcher *mThemeWatcher;
-    QString mCurrentThemePath;
-
-    bool mWmStarted;
-    bool mTrayStarted;
-    QEventLoop* mWaitLoop;
-
-    ProcReaper mProcReaper;
+    void startProcess(const XdgDesktopFile &file);
 
 private Q_SLOTS:
     void resetCrashReport();
@@ -86,19 +69,34 @@ private Q_SLOTS:
     void themeFolderChanged(const QString&);
 
     void themeChanged();
+
+private:
+    bool                    mWmStarted;
+    bool                    mTrayStarted;
+
+    ModulesMap              mNameMap;
+    QProcess*               mWmProcess;
+    ModulesCrashReport      mCrashReport;
+
+    QFileSystemWatcher*     mThemeWatcher;
+    QString                 mCurrentThemePath;
+
+    QEventLoop*             mWaitLoop;
+    ProcReaper              mProcReaper;
 };
 
 class GracefulModule : public QProcess
 {
     Q_OBJECT
 public:
-    GracefulModule(const XdgDesktopFile& file, QObject *parent = nullptr);
     void start();
     void terminate();
     bool isTerminating();
 
-    const XdgDesktopFile file;
-    const QString fileName;
+    GracefulModule(const XdgDesktopFile& file, QObject* parent = nullptr);
+
+    const XdgDesktopFile    file;
+    const QString           fileName;
 
 Q_SIGNALS:
     void moduleStateChanged(QString name, bool state);
@@ -107,7 +105,7 @@ private Q_SLOTS:
     void updateState(QProcess::ProcessState newState);
 
 private:
-    bool mIsTerminating;
+    bool                    mIsTerminating;
 };
 
 
