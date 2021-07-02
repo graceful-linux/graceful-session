@@ -29,7 +29,7 @@
 using namespace graceful;
 
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
-    mWmProcess(new QProcess(this)),
+    mWindowManager("graceful-wm"),
     mThemeWatcher(new QFileSystemWatcher(this)),
     mWmStarted(false),
     mTrayStarted(false),
@@ -52,7 +52,7 @@ void GracefulModuleManager::startup(Settings& s)
     startConfUpdate();
 
     // Start window manager
-    startWm(&s);
+    startWm();
 
     // start desktop
     QProcess::startDetached("peony-qt-desktop -w -d");
@@ -83,6 +83,11 @@ void GracefulModuleManager::startAutostartApps()
     const XdgDesktopFileList fileList = XdgAutoStart::desktopFileList();
     QList<const XdgDesktopFile*> trayApps;
     for (XdgDesktopFileList::const_iterator i = fileList.constBegin(); i != fileList.constEnd(); ++i) {
+        if (mNameMap.contains(i->name())) {
+            log_debug("progress '%s' has started!", i->name().toUtf8().constData());
+            continue;
+        }
+
         if (i->value(QSL("X-Graceful-Need-Tray"), false).toBool()) {
             log_debug("autostart file name with tray: %s", i->fileName().toUtf8().constData());
             trayApps.append(&(*i));
@@ -145,27 +150,24 @@ void GracefulModuleManager::themeChanged()
     }
 }
 
-void GracefulModuleManager::startWm(Settings* settings)
+void GracefulModuleManager::startWm()
 {
-    // if the WM is active do not run WM.
-    // all window managers must set their name according to the spec
     if (!QString::fromUtf8(NETRootInfo(QX11Info::connection(), NET::SupportingWMCheck).wmName()).isEmpty()) {
         mWmStarted = true;
         return;
     }
 
-
-
-    QString windowManager = "graceful-wm";
-    if (!findProgram(windowManager)) {
+    if (!findProgram(mWindowManager)) {
         QMessageBox::critical(nullptr, tr("windows manager error!"), "Window Manager 'graceful-wm' not found!", QMessageBox::Ok);
+        log_error("window manager '%s' not found!", mWindowManager.toUtf8().constData());
         qApp->exit(-1);
-        //
     }
 
-    log_debug("window manager '%s' start...", windowManager.toUtf8().constData());
-    mWmProcess->start(windowManager, QStringList());
+    log_debug("window manager '%s' start...", mWindowManager.toUtf8().constData());
+    XdgDesktopFile wmXDG = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Window Manager", mWindowManager);
+    wmXDG.setValue("X-Graceful-Module", true);
 
+    startProcess(wmXDG);
     // other autostart apps will be handled after the WM becomes available
 
     // Wait until the WM loads
@@ -184,7 +186,7 @@ void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
         return;
     }
     QStringList args = file.expandExecString();
-    if (args.isEmpty()) {
+    if (args.isEmpty() && findProgram(file.value("Exec").toString())) {
         log_debug("Wrong desktop file %s", file.fileName().toUtf8().constData());
         return;
     }
@@ -192,7 +194,12 @@ void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
     connect(proc, &GracefulModule::moduleStateChanged, this, &GracefulModuleManager::moduleStateChanged);
     proc->start();
 
-    QString name = QFileInfo(file.fileName()).fileName();
+    //
+    QString name = file.value("Exec").toString().split(' ').first();
+    if (name.isEmpty()) {
+        log_debug("invalid desktop file '%s', exec is null", file.fileName().toUtf8().constData());
+        return;
+    }
     mNameMap[name] = proc;
 
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &GracefulModuleManager::restartModules);
@@ -285,8 +292,6 @@ GracefulModuleManager::~GracefulModuleManager()
         delete p;
         mNameMap[i.key()] = nullptr;
     }
-
-    delete mWmProcess;
 }
 
 /**
@@ -310,15 +315,6 @@ void GracefulModuleManager::logout(bool doExit)
             log_debug("Module %s won't terminate ... killing.", qPrintable(i.key()));
             p->kill();
         }
-    }
-
-    // terminate all possible children except WM
-    mProcReaper.stop({mWmProcess->processId()});
-
-    mWmProcess->terminate();
-    if (mWmProcess->state() != QProcess::NotRunning && !mWmProcess->waitForFinished(2000)) {
-        log_debug("Window Manager won't terminate ... killing.");
-        mWmProcess->kill();
     }
 
     if (doExit) {

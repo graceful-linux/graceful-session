@@ -12,7 +12,7 @@
 bool findProgram(const QString &program)
 {
     QFileInfo fi(program);
-    if (fi.isExecutable()) {
+    if (!program.isEmpty() && fi.isExecutable()) {
         return true;
     }
 

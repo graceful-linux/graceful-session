@@ -53,8 +53,8 @@ Q_SIGNALS:
     void moduleStateChanged(QString moduleName, bool state);
 
 private:
+    void startWm();
     void wmStarted();
-    void startWm(graceful::Settings *settings);
 
     void startAutostartApps();
 
@@ -75,7 +75,6 @@ private:
     bool                    mTrayStarted;
 
     ModulesMap              mNameMap;
-    QProcess*               mWmProcess;
     ModulesCrashReport      mCrashReport;
 
     QFileSystemWatcher*     mThemeWatcher;
@@ -83,6 +82,8 @@ private:
 
     QEventLoop*             mWaitLoop;
     ProcReaper              mProcReaper;
+
+    QString                 mWindowManager;
 };
 
 class GracefulModule : public QProcess
