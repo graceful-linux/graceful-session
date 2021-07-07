@@ -56,6 +56,7 @@ private:
     void startWm();
     void startBar();
     void wmStarted();
+    void startNetworkPlugin();
 
     void startAutostartApps();
 
@@ -86,6 +87,7 @@ private:
 
     QString                 mWindowManager;
     QString                 mBar;
+    QString                 mNetworkPlugin;
 };
 
 class GracefulModule : public QProcess

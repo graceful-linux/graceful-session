@@ -31,6 +31,7 @@ using namespace graceful;
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
     mBar("graceful-bar"),
     mWindowManager("graceful-wm"),
+    mNetworkPlugin("nm-applet"),
     mThemeWatcher(new QFileSystemWatcher(this)),
     mWmStarted(false),
     mTrayStarted(false),
@@ -57,6 +58,9 @@ void GracefulModuleManager::startup(Settings& s)
 
     // start bar
     startBar();
+
+    // start network manager plugin
+    startNetworkPlugin();
 
     // start desktop
     QProcess::startDetached("peony-qt-desktop -w -d");
@@ -196,6 +200,21 @@ void GracefulModuleManager::startBar()
     barXDG.setValue("X-Graceful-Module", true);
 
     startProcess(barXDG);
+}
+
+void GracefulModuleManager::startNetworkPlugin()
+{
+    log_info ("start load graceful-nm-applet...");
+    if (!findProgram(mNetworkPlugin)) {
+        QMessageBox::critical(nullptr, tr("graceful-nm-applet error!"), "'graceful-nm-applet' not found!", QMessageBox::Ok);
+        log_error("graceful-nm-applet '%s' not found!", mNetworkPlugin.toUtf8().constData());
+        return;
+    }
+
+    XdgDesktopFile xdg = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Bar", mNetworkPlugin);
+    xdg.setValue("X-Graceful-Module", true);
+
+    startProcess(xdg);
 }
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
