@@ -54,6 +54,7 @@ Q_SIGNALS:
 
 private:
     void startWm();
+    void startBar();
     void wmStarted();
 
     void startAutostartApps();
@@ -84,6 +85,7 @@ private:
     ProcReaper              mProcReaper;
 
     QString                 mWindowManager;
+    QString                 mBar;
 };
 
 class GracefulModule : public QProcess

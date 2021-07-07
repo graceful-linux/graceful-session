@@ -29,6 +29,7 @@
 using namespace graceful;
 
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
+    mBar("graceful-bar"),
     mWindowManager("graceful-wm"),
     mThemeWatcher(new QFileSystemWatcher(this)),
     mWmStarted(false),
@@ -53,6 +54,9 @@ void GracefulModuleManager::startup(Settings& s)
 
     // Start window manager
     startWm();
+
+    // start bar
+    startBar();
 
     // start desktop
     QProcess::startDetached("peony-qt-desktop -w -d");
@@ -177,6 +181,21 @@ void GracefulModuleManager::startWm()
     QTimer::singleShot(30 * 1000, &waitLoop, SLOT(quit()));
     waitLoop.exec();
     mWaitLoop = nullptr;
+}
+
+void GracefulModuleManager::startBar()
+{
+    log_info ("start load graceful-bar...");
+    if (!findProgram(mBar)) {
+        QMessageBox::critical(nullptr, tr("graceful bar error!"), "'graceful-wm' not found!", QMessageBox::Ok);
+        log_error("graceful bar '%s' not found!", mBar.toUtf8().constData());
+        return;
+    }
+
+    XdgDesktopFile barXDG = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Bar", mBar);
+    barXDG.setValue("X-Graceful-Module", true);
+
+    startProcess(barXDG);
 }
 
 void GracefulModuleManager::startProcess(const XdgDesktopFile& file)
