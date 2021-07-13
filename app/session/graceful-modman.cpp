@@ -29,10 +29,11 @@
 using namespace graceful;
 
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
+    mThemeWatcher(new QFileSystemWatcher(this)),
     mBar("graceful-bar"),
+    mDesktop("graceful-desktop"),
     mWindowManager("graceful-wm"),
     mNetworkPlugin("nm-applet"),
-    mThemeWatcher(new QFileSystemWatcher(this)),
     mWmStarted(false),
     mTrayStarted(false),
     mWaitLoop(nullptr)
@@ -63,8 +64,7 @@ void GracefulModuleManager::startup(Settings& s)
     startNetworkPlugin();
 
     // start desktop
-    QProcess::startDetached("peony-qt-desktop -w -d");
-
+    startDesktop();
     // start plank
     QProcess::startDetached("plank");
 
@@ -200,6 +200,22 @@ void GracefulModuleManager::startBar()
     barXDG.setValue("X-Graceful-Module", true);
 
     startProcess(barXDG);
+}
+
+void GracefulModuleManager::startDesktop()
+{
+    log_info ("start graceful-desktop ...");
+
+    if (!findProgram(mDesktop)) {
+        QMessageBox::critical(nullptr, tr("graceful desktop error!"), tr("'%1' not found!").arg(mDesktop), QMessageBox::Ok);
+        log_error("'%s' not found!", mDesktop.toUtf8().constData());
+        return;
+    }
+
+    XdgDesktopFile desktopXDG = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Desktop", mDesktop);
+    desktopXDG.setValue("X-Graceful-Module", true);
+
+    startProcess(desktopXDG);
 }
 
 void GracefulModuleManager::startNetworkPlugin()

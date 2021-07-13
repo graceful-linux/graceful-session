@@ -56,6 +56,7 @@ private:
     void startWm();
     void startBar();
     void wmStarted();
+    void startDesktop();
     void startNetworkPlugin();
 
     void startAutostartApps();
@@ -85,8 +86,9 @@ private:
     QEventLoop*             mWaitLoop;
     ProcReaper              mProcReaper;
 
-    QString                 mWindowManager;
     QString                 mBar;
+    QString                 mDesktop;
+    QString                 mWindowManager;
     QString                 mNetworkPlugin;
 };
 
