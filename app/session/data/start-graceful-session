@@ -56,6 +56,11 @@ fi
 # Qt4 platform plugin
 export QT_PLATFORM_PLUGIN=xcb
 
+export QT_IM_MODULE=ibus
+export GTK_IM_MODULE=ibus
+export COLORTERM=truecolor
+export GTK3_MODULES=xapp-gtk3-module
+
 # Qt5 platform plugin
 export QT_QPA_PLATFORMTHEME=qt5ct
 

@@ -4,7 +4,8 @@ TARGET      = graceful-session
 QT          += core network gui gui-private xml widgets dbus x11extras KWindowSystem
 
 CONFIG      += c++11 link_pkgconfig no_keywords
-LIBS        += -lgio-2.0 -lglib-2.0 -lX11 -lgraceful -lprocps -lXss
+PKGCONFIG   += graceful gio-2.0 glib-2.0
+LIBS        += -lX11 -lprocps -lXss
 
 PKGCONFIG   += udev Qt5Xdg
 include($$PWD/../common/common.pri)
