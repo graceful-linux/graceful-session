@@ -66,8 +66,12 @@ void GracefulModuleManager::startup(Settings& s)
 
     // start desktop
     startDesktop();
+
     // start plank
     QProcess::startDetached("plank");
+
+    // start daemon
+    startDaemon();
 
     startAutostartApps();
 
