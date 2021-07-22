@@ -31,6 +31,7 @@ using namespace graceful;
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
     mThemeWatcher(new QFileSystemWatcher(this)),
     mBar("graceful-bar"),
+    mDaemon("graceful-daemon"),
     mDesktop("graceful-desktop"),
     mWindowManager("graceful-wm"),
     mNetworkPlugin("nm-applet"),
@@ -200,6 +201,22 @@ void GracefulModuleManager::startBar()
     barXDG.setValue("X-Graceful-Module", true);
 
     startProcess(barXDG);
+}
+
+void GracefulModuleManager::startDaemon()
+{
+    log_info ("start graceful-daemon ...");
+
+    if (!findProgram(mDaemon)) {
+        QMessageBox::critical(nullptr, tr("graceful daemon error!"), tr("'%1' not found!").arg(mDaemon), QMessageBox::Ok);
+        log_error("'%s' not found!", mDaemon.toUtf8().constData());
+        return;
+    }
+
+    XdgDesktopFile daemonXDG = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Daemon", mDaemon);
+    daemonXDG.setValue("X-Graceful-Module", true);
+
+    startProcess(daemonXDG);
 }
 
 void GracefulModuleManager::startDesktop()
