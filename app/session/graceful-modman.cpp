@@ -79,8 +79,9 @@ void GracefulModuleManager::startup(Settings& s)
     paths << XdgDirs::dataHome(false);
     paths << XdgDirs::dataDirs();
 
+    // FIXME://
     for(const QString &path : qAsConst(paths)) {
-        QFileInfo fi(QString::fromLatin1("%1/ukui/themes").arg(path));
+        QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
         if (fi.exists()) {
             log_debug("get theme path: %s", fi.absoluteFilePath().toUtf8().constData());
             mThemeWatcher->addPath(fi.absoluteFilePath());

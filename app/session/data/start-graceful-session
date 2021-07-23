@@ -54,15 +54,15 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
 fi
 
 # Qt4 platform plugin
-export QT_PLATFORM_PLUGIN=xcb
+export QT_PLATFORM_PLUGIN=graceful
+QT_STYLE_OVERRIDE=graceful
+# Qt5 platform plugin
+export QT_QPA_PLATFORMTHEME=graceful
 
 export QT_IM_MODULE=ibus
 export GTK_IM_MODULE=ibus
 export COLORTERM=truecolor
 export GTK3_MODULES=xapp-gtk3-module
-
-# Qt5 platform plugin
-export QT_QPA_PLATFORMTHEME=qt5ct
 
 export XDG_MENU_PREFIX="graceful-"
 
