@@ -40,7 +40,6 @@ GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
     mWaitLoop(nullptr)
 {
     connect(mThemeWatcher, &QFileSystemWatcher::directoryChanged, this, &GracefulModuleManager::themeFolderChanged);
-    connect(Settings::globalSettings(), &GlobalSettings::gracefulThemeChanged, this, &GracefulModuleManager::themeChanged);
 
     qApp->installNativeEventFilter(this);
     mProcReaper.start();
