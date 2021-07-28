@@ -61,9 +61,6 @@ void GracefulModuleManager::startup(Settings& s)
     // start plank
     startDocker();
 
-    // start daemon
-    startDaemon();
-
     // start desktop
     startDesktop();
 
@@ -76,6 +73,8 @@ void GracefulModuleManager::startup(Settings& s)
     // start network manager plugin
     startNetworkPlugin();
 
+    // start daemon
+    startDaemon();
 
 
 //    QStringList paths;

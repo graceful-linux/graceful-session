@@ -53,19 +53,42 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     fi
 fi
 
+# regin
+SETTING=$(G_MESSAGES_DEBUG='' gsettings get org.gnome.system.local region)
+REGION=${SETTING#\'}
+REGION=${REGION%\'}
+
+if [ -n "$REGION" ]; then
+    unset LC_TIME LC_NUMERIC LC_MONETARY LC_MEASUREMENT LC_PAPER
+
+    if [ "$LANG" != "$region" ]; then
+        export LC_TIME=$REGION
+        export LC_NUMERIC=$REGION
+        export LC_MONETARY=$REGION
+        export LC_MEASUREMENT=$REGION
+        export LC_PAPER=$REGION
+    fi
+fi
+
 # Qt4 platform plugin
 export QT_PLATFORM_PLUGIN=graceful
 QT_STYLE_OVERRIDE=graceful
 # Qt5 platform plugin
 export QT_QPA_PLATFORMTHEME=graceful
 
-export QT_IM_MODULE=ibus
+# ibus
+# gtk application
 export GTK_IM_MODULE=ibus
+# qt application
+export QT_IM_MODULE=ibus
+# old x application
+export XMODIFIERS=@im=ibus
+
+
 export COLORTERM=truecolor
 export GTK3_MODULES=xapp-gtk3-module
 
 export XDG_MENU_PREFIX="graceful-"
-
 export XDG_CURRENT_DESKTOP="GracefulLinux"
 
 # default editor
