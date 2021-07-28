@@ -25,6 +25,8 @@ SessionApplication::SessionApplication(int& argc, char** argv) :
 {
     listenToUnixSignals({SIGINT, SIGTERM, SIGQUIT, SIGHUP});
 
+    initSettings();
+
     modman = new GracefulModuleManager;
     connect(this, &graceful::Application::unixSignal, modman, [this] { modman->logout(true); });
     new SessionDBusAdaptor(modman);
@@ -87,6 +89,36 @@ void SessionApplication::initShotcuts()
         }
     });
 
+}
+
+void SessionApplication::initSettings()
+{
+    QString iconTheme = QIcon::themeName();
+    QStringList iconPath = QIcon::themeSearchPaths();
+    iconPath << "/usr/share/icons/";
+    iconPath.removeDuplicates();
+
+    QIcon::setThemeSearchPaths(iconPath);
+
+    if (iconTheme=="hicolor" || iconTheme.isEmpty()) {
+        QStringList ls;
+        ls << "graceful"   << "Papirus"<<"Adwaita"
+           << "oxygen"     << "Mint-X" << "Humanity"
+           << "elementary" <<"breeze"  << "gnome"   <<"Numix";
+        QDir dir("/usr/share/icons/");
+        for (QString s : ls) {
+            if (dir.exists(s)) {
+                iconTheme = s;
+                break;
+            }
+        }
+    }
+
+    if (iconTheme.isNull() || iconTheme.isEmpty()) {
+        iconTheme = "hicolor";
+    }
+
+    QIcon::setThemeName(iconTheme);
 }
 
 void SessionApplication::mergeXrdb(const char* content, int len)

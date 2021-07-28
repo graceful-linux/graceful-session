@@ -56,6 +56,7 @@ private:
     void startWm();
     void startBar();
     void wmStarted();
+    void startDocker();
     void startDaemon();
     void startDesktop();
     void startNetworkPlugin();
@@ -88,6 +89,7 @@ private:
     ProcReaper              mProcReaper;
 
     QString                 mBar;
+    QString                 mDocker;
     QString                 mDaemon;
     QString                 mDesktop;
     QString                 mWindowManager;

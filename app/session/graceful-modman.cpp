@@ -30,13 +30,14 @@ using namespace graceful;
 
 GracefulModuleManager::GracefulModuleManager(QObject* parent) : QObject(parent),
     mThemeWatcher(new QFileSystemWatcher(this)),
+    mDocker("plank"),
     mBar("graceful-bar"),
     mDaemon("graceful-daemon"),
     mDesktop("graceful-desktop"),
     mWindowManager("graceful-wm"),
     mNetworkPlugin("nm-applet"),
-    mWmStarted(false),
     mTrayStarted(false),
+    mWmStarted(false),
     mWaitLoop(nullptr)
 {
     connect(mThemeWatcher, &QFileSystemWatcher::directoryChanged, this, &GracefulModuleManager::themeFolderChanged);
@@ -52,42 +53,45 @@ void GracefulModuleManager::setWindowManager(const QString & windowManager)
 
 void GracefulModuleManager::startup(Settings& s)
 {
-    startConfUpdate();
+//    startConfUpdate();
 
     // Start window manager
     startWm();
 
-    // start bar
-    startBar();
-
-    // start network manager plugin
-    startNetworkPlugin();
-
-    // start desktop
-    startDesktop();
-
     // start plank
-    QProcess::startDetached("plank");
+    startDocker();
 
     // start daemon
     startDaemon();
 
+    // start desktop
+    startDesktop();
+
+    // start bar
+    startBar();
+
+    // start apps
     startAutostartApps();
 
-    QStringList paths;
-    paths << XdgDirs::dataHome(false);
-    paths << XdgDirs::dataDirs();
+    // start network manager plugin
+    startNetworkPlugin();
+
+
+
+//    QStringList paths;
+//    paths << XdgDirs::dataHome(false);
+//    paths << XdgDirs::dataDirs();
 
     // FIXME://
-    for(const QString &path : qAsConst(paths)) {
-        QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
-        if (fi.exists()) {
-            log_debug("get theme path: %s", fi.absoluteFilePath().toUtf8().constData());
-            mThemeWatcher->addPath(fi.absoluteFilePath());
-        }
-    }
+//    for(const QString &path : qAsConst(paths)) {
+//        QFileInfo fi(QString::fromLatin1("%1/graceful/themes").arg(path));
+//        if (fi.exists()) {
+//            log_debug("get theme path: %s", fi.absoluteFilePath().toUtf8().constData());
+//            mThemeWatcher->addPath(fi.absoluteFilePath());
+//        }
+//    }
 
-    themeChanged();
+//    themeChanged();
 }
 
 void GracefulModuleManager::startAutostartApps()
@@ -205,6 +209,22 @@ void GracefulModuleManager::startBar()
     barXDG.setValue("X-Graceful-Module", true);
 
     startProcess(barXDG);
+}
+
+void GracefulModuleManager::startDocker()
+{
+    log_info ("start graceful-docker ...");
+
+    if (!findProgram(mDocker)) {
+        QMessageBox::critical(nullptr, tr("graceful docker error!"), tr("'%1' not found!").arg(mDocker), QMessageBox::Ok);
+        log_error("'%s' not found!", mDocker.toUtf8().constData());
+        return;
+    }
+
+    XdgDesktopFile dockerXDG = XdgDesktopFile(XdgDesktopFile::ApplicationType, "Graceful Docker", mDocker);
+    dockerXDG.setValue("X-Graceful-Module", true);
+
+    startProcess(dockerXDG);
 }
 
 void GracefulModuleManager::startDaemon()

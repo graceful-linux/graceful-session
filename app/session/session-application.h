@@ -23,6 +23,7 @@ private Q_SLOTS:
 
 private:
     void initShotcuts();
+    void initSettings();
     void loadMouseSettings(graceful::Settings &settings);
     void loadKeyboardSettings(graceful::Settings &settings);
     void loadEnvironmentSettings(graceful::Settings &settings);
